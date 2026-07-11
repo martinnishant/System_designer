@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>✨ Enchanted Architect — Magical System Design AI</title>
+  <meta name="description" content="Transform your application dreams into enchanted system designs with the magic of AI. Architecture diagrams, roadmaps, and tech stacks — Disney style."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Magic cursor trail canvas -->
+  <canvas id="magicCanvas"></canvas>
+
+  <!-- Floating sparkles layer -->
+  <div id="sparkleLayer" aria-hidden="true"></div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-box tilt-card" id="settingsCard">
+      <div class="modal-header">
+        <h2 id="settingsTitle">
+          <span class="magic-icon">🪄</span> Magic Configuration
+        </h2>
+        <button id="closeSettings" class="icon-btn" aria-label="Close settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="apiKeyInput">
+            <span class="magic-icon">🔑</span> Groq API Key
+          </label>
+          <input type="password" id="apiKeyInput" placeholder="gsk_…your Groq API key" class="form-input" autocomplete="off"/>
+          <p class="form-hint">
+            Get your <strong>free</strong> key at <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a> — no cost, no credit card!
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="modelSelect">
+            <span class="magic-icon">🧠</span> AI Model
+          </label>
+          <select id="modelSelect" class="form-input">
+            <option value="llama-3.3-70b-versatile" selected>Llama 3.3 70B Versatile (Best Quality)</option>
+            <option value="llama3-70b-8192">Llama 3 70B (Fast)</option>
+            <option value="mixtral-8x7b-32768">Mixtral 8x7B (Long Context)</option>
+            <option value="gemma2-9b-it">Gemma 2 9B (Lightest)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="scaleSelect">
+            <span class="magic-icon">⚡</span> Scale Scenario
+          </label>
+          <select id="scaleSelect" class="form-input">
+            <option value="startup">🌱 Startup / MVP (small team, low traffic)</option>
+            <option value="growth" selected>📈 Growth Stage (10k–100k users)</option>
+            <option value="enterprise">🏰 Enterprise (millions of users)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="detailSelect">
+            <span class="magic-icon">🔮</span> Detail Level
+          </label>
+          <select id="detailSelect" class="form-input">
+            <option value="overview">Overview</option>
+            <option value="detailed" selected>Detailed (recommended)</option>
+            <option value="deep">Deep Dive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><span class="magic-icon">🛡️</span> Production Concerns</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" id="chkScalability" checked/><span class="checkbox-custom"></span>Scalability</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkSecurity" checked/><span class="checkbox-custom"></span>Security</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkFaultTolerance" checked/><span class="checkbox-custom"></span>Fault Tolerance</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkCaching"/><span class="checkbox-custom"></span>Caching</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkMonitoring"/><span class="checkbox-custom"></span>Monitoring</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkCICD"/><span class="checkbox-custom"></span>CI/CD</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettings" class="btn-magic">
+          <span class="btn-magic-sparkle">✨</span> Save & Enchant
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Design History">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="logo-wand">🪄</span>
+          <span class="logo-text">Enchanted<br/><small>Architect</small></span>
+        </div>
+        <button id="toggleSidebar" class="icon-btn" aria-label="Close sidebar">✕</button>
+      </div>
+      <button id="newDesignBtn" class="btn-sidebar-new">
+        <span>✨</span> New Enchantment
+      </button>
+      <div class="sidebar-section-label">📜 Spell Book</div>
+      <ul id="historyList" class="history-list" role="list"></ul>
+      <div class="sidebar-footer">
+        <button id="settingsBtn" class="sidebar-action-btn">⚙️ Configuration</button>
+        <button id="clearHistoryBtn" class="sidebar-action-btn danger">🗑️ Clear Spells</button>
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main -->
+    <main class="main-content" id="mainContent">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <button id="openSidebar" class="icon-btn topbar-menu" aria-label="Open sidebar">☰</button>
+        <div class="topbar-brand">
+          <span class="topbar-wand">🪄</span>
+          <span class="topbar-title">Enchanted Architect <span class="ai-badge">AI</span></span>
+        </div>
+        <div class="topbar-right">
+          <button id="topbarSettings" class="icon-btn" title="Settings">⚙️</button>
+        </div>
+      </header>
+
+      <div class="page-scroll" id="pageScroll">
+
+        <!-- HERO -->
+        <section class="hero" id="heroSection">
+          <div class="hero-bg"></div>
+          <div class="hero-mist"></div>
+
+          <!-- Floating 3D orbs -->
+          <div class="orb orb-1" aria-hidden="true"></div>
+          <div class="orb orb-2" aria-hidden="true"></div>
+          <div class="orb orb-3" aria-hidden="true"></div>
+          <div class="orb orb-4" aria-hidden="true"></div>
+
+          <div class="hero-content" id="heroContent">
+            <div class="hero-badge">
+              <span class="badge-star">⭐</span>
+              <span>Powered by Groq · Free &amp; Lightning Fast</span>
+              <span class="badge-star">⭐</span>
+            </div>
+            <h1 class="hero-title">
+              <span class="hero-title-top">Where Dreams Become</span>
+              <span class="hero-title-magic">Architectures</span>
+            </h1>
+            <p class="hero-subtitle">
+              Describe your application and watch the magic unfold — complete system designs, live architecture diagrams, and implementation roadmaps, conjured in seconds.
+            </p>
+            <div class="hero-cta">
+              <button class="btn-magic btn-hero" id="heroStartBtn">
+                <span class="btn-magic-sparkle">✨</span>
+                Begin Your Quest
+              </button>
+              <button class="btn-ghost" id="heroExampleBtn">
+                🎬 See an Example
+              </button>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-stat floating-card">
+                <div class="stat-icon">🏰</div>
+                <div class="stat-value">5+</div>
+                <div class="stat-label">Design Sections</div>
+              </div>
+              <div class="hero-stat floating-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-value">Free</div>
+                <div class="stat-label">Groq API</div>
+              </div>
+              <div class="hero-stat floating-card">
+                <div class="stat-icon">🗺️</div>
+                <div class="stat-value">Live</div>
+                <div class="stat-label">Architecture Maps</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- INPUT SECTION -->
+        <section class="input-section" id="inputSection">
+          <div class="section-container">
+            <div class="section-header">
+              <div class="section-spell-circle" aria-hidden="true">
+                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="100" cy="100" r="95" stroke="url(#sg)" stroke-width="1.5" stroke-dasharray="8 4"/>
+                  <circle cx="100" cy="100" r="75" stroke="url(#sg2)" stroke-width="1" stroke-dasharray="4 8" opacity="0.6"/>
+                  <defs>
+                    <linearGradient id="sg" x1="0" y1="0" x2="200" y2="200">
+                      <stop offset="0%" stop-color="#f5c842"/><stop offset="100%" stop-color="#c084fc"/>
+                    </linearGradient>
+                    <linearGradient id="sg2" x1="200" y1="0" x2="0" y2="200">
+                      <stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#f5c842"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span class="spell-star">✦</span>
+              </div>
+              <h2 class="section-title">Cast Your Spell</h2>
+              <p class="section-subtitle">Describe your application idea — the more detail you share, the more powerful the enchantment.</p>
+            </div>
+
+            <!-- Example chips -->
+            <div class="example-chips">
+              <span class="chips-label">✨ Quick spells:</span>
+              <button class="chip" data-example="A real-time collaborative document editing platform like Google Docs. Multiple users can edit the same document simultaneously, with presence indicators, commenting, and revision history. Needs to handle 100k+ concurrent users.">📝 Collab Editor</button>
+              <button class="chip" data-example="An AI-powered e-commerce recommendation engine that analyzes user behavior, purchase history, and product catalog to suggest personalized products. Needs to process 1M+ daily events with sub-100ms recommendation latency.">🛍️ AI E-Commerce</button>
+              <button class="chip" data-example="A multi-tenant SaaS analytics dashboard that ingests events from customer applications, processes them in real-time, stores aggregated metrics, and displays interactive charts. Similar to Mixpanel or Amplitude.">📊 SaaS Analytics</button>
+              <button class="chip" data-example="A ride-sharing application like Uber with real-time GPS tracking, dynamic pricing, driver-passenger matching, payments, and notifications. Needs to handle geospatial queries and real-time events at scale.">🚗 Ride-Sharing</button>
+            </div>
+
+            <!-- Floating 3D Input Card -->
+            <div class="input-card tilt-card" id="inputCard">
+              <div class="card-glow"></div>
+              <div class="input-card-header">
+                <div class="input-icon-wrap">🔮</div>
+                <span>Your Vision</span>
+                <span class="char-counter" id="charCounter">0 / 2000</span>
+              </div>
+              <textarea
+                id="appDescription"
+                class="main-textarea"
+                placeholder="Once upon a time, there was an application idea...&#10;&#10;Tell me:&#10;• What does your app do?&#10;• Who are your users?&#10;• What scale do you expect?&#10;• Any special technical requirements?&#10;&#10;Press ✦ Ctrl+Enter to conjure your design!"
+                maxlength="2000"
+                rows="10"
+                aria-label="Application description"
+              ></textarea>
+              <div class="input-card-footer">
+                <div class="input-toggles">
+                  <label class="toggle-item" title="Include production-ready patterns">
+                    <input type="checkbox" id="toggleProduction" checked/>
+                    <span class="toggle-switch"></span>
+                    <span>Production-Ready</span>
+                  </label>
+                  <label class="toggle-item" title="Generate visual architecture diagram">
+                    <input type="checkbox" id="toggleDiagram" checked/>
+                    <span class="toggle-switch"></span>
+                    <span>Visual Diagram</span>
+                  </label>
+                </div>
+                <button class="btn-magic btn-generate" id="generateBtn" aria-label="Generate system design">
+                  <span class="btn-magic-sparkle">✨</span>
+                  <span class="btn-text">Conjure Design</span>
+                  <span class="btn-loading" style="display:none">
+                    <span class="magic-spinner"></span>
+                    Conjuring...
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- API Warning -->
+            <div class="api-warning" id="apiKeyWarning" style="display:none">
+              <span>🔑</span>
+              No Groq API key found!
+              <button id="warningSettingsBtn" class="link-btn">Open Configuration</button>
+              to add your free key.
+            </div>
+          </div>
+        </section>
+
+        <!-- OUTPUT SECTION -->
+        <section class="output-section" id="outputSection" style="display:none">
+          <div class="section-container wide">
+
+            <!-- Output Header -->
+            <div class="output-header">
+              <div class="output-header-left">
+                <span class="output-glow-dot"></span>
+                <h2 class="output-title" id="outputTitle">Your Enchantment is Ready!</h2>
+              </div>
+              <div class="output-header-actions">
+                <button class="btn-outline-magic" id="copyAllBtn">📋 Copy All</button>
+                <button class="btn-outline-magic" id="downloadBtn">⬇️ Download</button>
+                <button class="btn-outline-magic" id="regenerateBtn">🔄 Re-Conjure</button>
+              </div>
+            </div>
+
+            <!-- Tab Nav -->
+            <nav class="tab-nav" role="tablist" aria-label="Design sections">
+              <button class="tab-btn active" data-tab="overview" role="tab" id="tabOverview" aria-selected="true" aria-controls="panelOverview">
+                🏰 Overview
+              </button>
+              <button class="tab-btn" data-tab="diagram" role="tab" id="tabDiagram" aria-selected="false" aria-controls="panelDiagram">
+                🗺️ Architecture
+              </button>
+              <button class="tab-btn" data-tab="roadmap" role="tab" id="tabRoadmap" aria-selected="false" aria-controls="panelRoadmap">
+                📜 Roadmap
+              </button>
+              <button class="tab-btn" data-tab="stack" role="tab" id="tabStack" aria-selected="false" aria-controls="panelStack">
+                🔮 Tech Stack
+              </button>
+              <button class="tab-btn" data-tab="concerns" role="tab" id="tabConcerns" aria-selected="false" aria-controls="panelConcerns">
+                🛡️ Production
+              </button>
+              <button class="tab-btn" data-tab="followup" role="tab" id="tabFollowup" aria-selected="false" aria-controls="panelFollowup">
+                💬 Next Steps
+              </button>
+            </nav>
+
+            <!-- Tab Panels -->
+            <div class="tab-content">
+
+              <div class="tab-panel active" id="panelOverview" role="tabpanel">
+                <div class="magic-card tilt-card output-card" id="outputCard1">
+                  <div class="card-glow"></div>
+                  <div id="overviewContent" class="prose-content"></div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="panelDiagram" role="tabpanel">
+                <div class="magic-card tilt-card" id="outputCard2">
+                  <div class="card-glow"></div>
+                  <div class="diagram-toolbar">
+                    <span class="diagram-label">🗺️ Architecture Map</span>
+                    <div class="diagram-btns">
+                      <button class="btn-outline-magic btn-sm" id="zoomInBtn">＋</button>
+                      <button class="btn-outline-magic btn-sm" id="zoomOutBtn">－</button>
+                      <button class="btn-outline-magic btn-sm" id="resetZoomBtn">⟳</button>
+                      <button class="btn-outline-magic btn-sm" id="copyDiagramBtn">📋 Source</button>
+                    </div>
+                  </div>
+                  <div class="diagram-viewport" id="diagramViewport">
+                    <div class="diagram-canvas" id="diagramCanvas">
+                      <div id="mermaidDiagram"></div>
+                    </div>
+                  </div>
+                  <div class="diagram-source-toggle">
+                    <button class="link-btn" id="toggleSourceBtn">🪄 View Mermaid Source</button>
+                  </div>
+                  <div id="mermaidSource" class="mermaid-source" style="display:none">
+                    <pre id="mermaidSourceCode"></pre>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="panelRoadmap" role="tabpanel">
+                <div class="magic-card tilt-card" id="outputCard3">
+                  <div class="card-glow"></div>
+                  <div id="roadmapContent" class="prose-content"></div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="panelStack" role="tabpanel">
+                <div class="magic-card tilt-card" id="outputCard4">
+                  <div class="card-glow"></div>
+                  <div id="stackContent" class="prose-content"></div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="panelConcerns" role="tabpanel">
+                <div class="magic-card tilt-card" id="outputCard5">
+                  <div class="card-glow"></div>
+                  <div id="concernsContent" class="prose-content"></div>
+                </div>
+              </div>
+
+              <div class="tab-panel" id="panelFollowup" role="tabpanel">
+                <div class="magic-card tilt-card" id="outputCard6">
+                  <div class="card-glow"></div>
+                  <div id="followupContent" class="prose-content"></div>
+                  <div class="followup-input-area" id="followupInputArea">
+                    <div class="followup-label">💬 Ask the enchanted architect...</div>
+                    <div class="followup-row">
+                      <textarea id="followupInput" class="followup-textarea" placeholder="e.g. 'Show me the database schema' or 'How do I implement auth?'" rows="3"></textarea>
+                      <button class="btn-magic btn-followup" id="followupBtn">
+                        <span>✨</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- Error Section -->
+        <section class="error-section" id="errorSection" style="display:none">
+          <div class="section-container">
+            <div class="error-card magic-card tilt-card">
+              <div class="card-glow"></div>
+              <div class="error-icon">🌙</div>
+              <h3>The spell went awry...</h3>
+              <p id="errorMessage">Something went wrong. Please check your API key and try again.</p>
+              <button class="btn-magic" id="retryBtn">🪄 Try Again</button>
+            </div>
+          </div>
+        </section>
+
+        <footer class="app-footer">
+          <p>✨ Enchanted Architect &mdash; Powered by <strong>Groq AI</strong> · Diagrams by Mermaid.js · Made with magic ✨</p>
+        </footer>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
