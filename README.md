@@ -1,6 +1,6 @@
 # 🧠 System Designer AI
 
-> Transform your application ideas into comprehensive, production-ready system designs — powered by Google Gemini AI.
+> Transform your application ideas into comprehensive, production-ready system designs 
 
 ## Features
 
@@ -15,7 +15,7 @@
 
 ## Setup
 
-1. Get a free **Gemini API key** from [aistudio.google.com](https://aistudio.google.com/apikey)
+1. Get a API Key google, groq etc
 2. Open `index.html` in your browser
 3. Click ⚙️ Settings and enter your API key
 4. Describe your app and hit **Generate Design**!
